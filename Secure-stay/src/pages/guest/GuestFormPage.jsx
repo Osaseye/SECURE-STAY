@@ -133,16 +133,16 @@ const GuestFormPage = () => {
 
           const bookingPayload = {
              id: ref,
-             guest: formData.fullname,
+             guestName: formData.fullname,
              email: formData.email,
              phone: formData.phone,
-             room: 'Grand Horizon Suite', // Hardcoded for demo
+             roomType: 'Grand Horizon Suite', 
              checkIn: '2024-03-20',
              checkOut: '2024-03-25',
              amount: 985000,
              status: status,
              fraudScore: finalScore,
-             method: 'Web',
+             bookingChannel: 'Web',
              ipAddress: ipAddress,
              fraudAnalysis: {
                 reasons: reasons.length > 0 ? reasons : ['Standard transaction pattern'],
