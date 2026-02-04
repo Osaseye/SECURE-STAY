@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useScrollObserver } from '../../hooks/useScrollObserver';
+import { predictFraud } from '../../services/fraudService';
+import { createBooking } from '../../services/bookingService';
 
 const GuestFormPage = () => {
   useScrollObserver();
@@ -105,21 +107,68 @@ const GuestFormPage = () => {
     setBookingRef(ref);
     setBookingStatus('review');
 
+    // 1. Get Signals
     const fraudSignals = getFraudSignals();
     
-    console.log("Booking Under Review", {
-      ref,
-      ...formData,
-      ip_address: ipAddress,
-      timestamp: new Date().toISOString(),
-      fraud_prediction_input: fraudSignals
-    });
+    // 2. Call AI Service & Save to Firestore
+    // Note: We use an async function inside here to not block the UI 'review' state
+    const processBooking = async () => {
+       try {
+          // A. Get Risk Score from Python API
+          const riskScore = await predictFraud(fraudSignals);
+          const finalScore = Math.round(riskScore * 100); // 0.85 -> 85
+          
+          // B. Determine Status based on Score
+          // > 80 = Review/Reject, < 20 = Auto Confirm
+          let status = 'Confirmed';
+          if (finalScore > 80) status = 'Rejected'; 
+          else if (finalScore > 20) status = 'Under Review';
 
-    // Simulate AI Microservice Analysis Delay
-    setTimeout(() => {
-        setBookingStatus('success');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 4000); 
+          // C. Prepare Data Analysis for Admin View
+          const reasons = [];
+          if(fraudSignals.ip_risk) reasons.push('High Risk IP detected');
+          if(fraudSignals.odd_hour) reasons.push('Booking placed at unusual hour');
+          if(fraudSignals.rapid_attempts) reasons.push('Velocity check failed (Rapid attempts)');
+          if(fraudSignals.country_mismatch) reasons.push('Billing country does not match IP');
+
+          const bookingPayload = {
+             id: ref,
+             guest: formData.fullname,
+             email: formData.email,
+             phone: formData.phone,
+             room: 'Grand Horizon Suite', // Hardcoded for demo
+             checkIn: '2024-03-20',
+             checkOut: '2024-03-25',
+             amount: 985000,
+             status: status,
+             fraudScore: finalScore,
+             method: 'Web',
+             ipAddress: ipAddress,
+             fraudAnalysis: {
+                reasons: reasons.length > 0 ? reasons : ['Standard transaction pattern'],
+                riskFactors: reasons
+             },
+             rawSignals: fraudSignals
+          };
+
+          // D. Save to DB
+          await createBooking(bookingPayload);
+          
+          // E. Update UI (After artificial delay for user experience)
+          setTimeout(() => {
+              // If status is rejected, maybe show a different screen? 
+              // For this demo, we'll show success but maybe with a note if under review.
+              setBookingStatus('success'); 
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+          }, 3000);
+
+       } catch (error) {
+          console.error("Booking Process Failed", error);
+          // Handle fail state
+       }
+    };
+    
+    processBooking();
   };
 
   if (bookingStatus === 'review') {

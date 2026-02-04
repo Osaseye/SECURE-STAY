@@ -81,7 +81,11 @@ const Navbar = () => {
           )}
 
           {/* Right Action Section */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
+            <Link to="/track-booking" className="hidden sm:block text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">
+                Check Status
+            </Link>
+
             {isHome ? (
               <Link 
                 to="/hotels" 

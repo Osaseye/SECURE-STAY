@@ -7,31 +7,41 @@ import HotelSearch from './pages/guest/HotelSearch';
 import HotelDetails from './pages/guest/HotelDetails';
 import RoomSelection from './pages/guest/RoomSelection';
 import GuestFormPage from './pages/guest/GuestFormPage';
+import TrackBooking from './pages/guest/TrackBooking';
 import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
-import FraudMonitor from './pages/admin/FraudMonitor';
+import Bookings from './pages/admin/Bookings';
+import BookingDetails from './pages/admin/BookingDetails';
+import Settings from './pages/admin/Settings';
+import NotFound from './pages/common/NotFound';
 
 function App() {
   return (
     <Routes>
-      {/* Admin Routes */}
+      {/* Admin Login Route - Independent */}
       <Route path="/admin" element={<AdminLogin />} />
       
-      {/* Protected Admin Routes */}
+      {/* Protected Admin Routes - Using AdminLayout */}
       <Route path="/admin" element={<AdminLayout />}>
          <Route path="dashboard" element={<Dashboard />} />
-         <Route path="fraud-monitor" element={<FraudMonitor />} />
+         <Route path="bookings" element={<Bookings />} />
+         <Route path="bookings/:id" element={<BookingDetails />} />
+         <Route path="settings" element={<Settings />} />
       </Route>
 
-      {/* Guest Routes */}
+      {/* Guest Routes - Using GuestLayout Wrapper */}
       <Route path="/" element={<GuestLayout><LandingPage /></GuestLayout>} />
       <Route path="/hotels" element={<GuestLayout><HotelSearch /></GuestLayout>} />
       <Route path="/hotels/:id" element={<GuestLayout><HotelDetails /></GuestLayout>} />
       <Route path="/hotels/:id/rooms" element={<GuestLayout><RoomSelection /></GuestLayout>} />
       <Route path="/booking" element={<GuestLayout><GuestFormPage /></GuestLayout>} />
+      <Route path="/track-booking" element={<GuestLayout><TrackBooking /></GuestLayout>} />
+      
+      {/* Fallback Route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }
 
-export default App
+export default App;
 
