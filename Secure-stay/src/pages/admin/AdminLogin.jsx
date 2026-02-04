@@ -1,19 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+      const isAuth = localStorage.getItem('isAuthenticated') === 'true';
+      if (isAuth) {
+          navigate('/admin/dashboard');
+      }
+  }, [navigate]);
 
   const handleLogin = (e) => {
     e.preventDefault();
     setLoading(true);
-    // Mimic API
+    setError('');
+
+    // Predefined Credentials
+    const ADMIN_EMAIL = 'admin@securestay.ng';
+    const ADMIN_PASS = 'secure123';
+
     setTimeout(() => {
-        setLoading(false);
-        navigate('/admin/dashboard');
+        if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
+            localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('user', JSON.stringify({ name: 'Segun Admin', role: 'admin' }));
+            setLoading(false);
+            navigate('/admin/dashboard');
+        } else {
+            setLoading(false);
+            setError('Invalid credentials. Please check your email and password.');
+        }
     }, 1500);
   };
 
@@ -82,10 +103,17 @@ const AdminLogin = () => {
           </div>
 
           {/* Alert/Status */}
-          <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-100">
-            <span className="material-icons-outlined text-primary text-[20px]">lock</span>
-            <p className="text-sm text-primary font-medium">Connection is end-to-end encrypted</p>
-          </div>
+          {error ? (
+              <div className="flex items-center gap-3 rounded-lg bg-red-50 p-3 border border-red-100 animate-pulse">
+                <span className="material-icons-outlined text-red-600 text-[20px]">error</span>
+                <p className="text-sm text-red-600 font-medium">{error}</p>
+              </div>
+          ) : (
+              <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-100">
+                <span className="material-icons-outlined text-primary text-[20px]">lock</span>
+                <p className="text-sm text-primary font-medium">Connection is end-to-end encrypted</p>
+              </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleLogin} className="flex flex-col gap-5">
@@ -115,13 +143,19 @@ const AdminLogin = () => {
                   className="flex w-full min-w-0 resize-none overflow-hidden rounded-lg text-slate-900 focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-slate-200 bg-white focus:border-primary h-12 placeholder:text-slate-400 pl-4 pr-12 text-base font-normal leading-normal transition-all" 
                   id="password" 
                   placeholder="••••••••••••" 
-                  type="password" 
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                <button type="button" className="absolute right-0 top-0 bottom-0 px-3 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors">
-                  <span className="material-icons-outlined text-[20px]">visibility_off</span>
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-0 top-0 bottom-0 px-3 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"
+                >
+                  <span className="material-icons-outlined text-[20px]">
+                    {showPassword ? 'visibility' : 'visibility_off'}
+                  </span>
                 </button>
               </div>
             </div>

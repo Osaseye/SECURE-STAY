@@ -14,6 +14,7 @@ import Bookings from './pages/admin/Bookings';
 import BookingDetails from './pages/admin/BookingDetails';
 import Settings from './pages/admin/Settings';
 import NotFound from './pages/common/NotFound';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -21,12 +22,14 @@ function App() {
       {/* Admin Login Route - Independent */}
       <Route path="/admin" element={<AdminLogin />} />
       
-      {/* Protected Admin Routes - Using AdminLayout */}
-      <Route path="/admin" element={<AdminLayout />}>
-         <Route path="dashboard" element={<Dashboard />} />
-         <Route path="bookings" element={<Bookings />} />
-         <Route path="bookings/:id" element={<BookingDetails />} />
-         <Route path="settings" element={<Settings />} />
+      {/* Protected Admin Routes */}
+      <Route element={<ProtectedRoute />}>
+         <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="bookings" element={<Bookings />} />
+            <Route path="bookings/:id" element={<BookingDetails />} />
+            <Route path="settings" element={<Settings />} />
+         </Route>
       </Route>
 
       {/* Guest Routes - Using GuestLayout Wrapper */}

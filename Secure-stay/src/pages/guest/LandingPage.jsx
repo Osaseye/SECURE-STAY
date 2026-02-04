@@ -125,6 +125,110 @@ const LandingPage = () => {
             </form>
           </div>
         </div>
+
+        {/* Stats Bar */}
+        <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-md border-t border-white/10 z-20">
+            <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white/90">
+                <div>
+                    <div className="text-2xl font-bold text-blue-400">99.8%</div>
+                    <div className="text-xs uppercase tracking-wide opacity-70 font-medium">Fraud Prevention</div>
+                </div>
+                <div>
+                    <div className="text-2xl font-bold text-blue-400">2.5ms</div>
+                    <div className="text-xs uppercase tracking-wide opacity-70 font-medium">Analysis Speed</div>
+                </div>
+                <div>
+                    <div className="text-2xl font-bold text-blue-400">500+</div>
+                    <div className="text-xs uppercase tracking-wide opacity-70 font-medium">Hotels Secured</div>
+                </div>
+                <div>
+                    <div className="text-2xl font-bold text-blue-400">Lagos</div>
+                    <div className="text-xs uppercase tracking-wide opacity-70 font-medium">HQ Location</div>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {/* Trust Indicators / Infinite Logo Scroll */}
+      <div className="bg-white py-12 border-b border-gray-100 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+            <p className="text-center text-sm font-bold uppercase text-gray-400 tracking-wider">Trusted by Top Nigerian Hotel Chains</p>
+        </div>
+        
+        <div className="relative flex overflow-x-hidden group">
+            <div className="animate-marquee flex whitespace-nowrap gap-16 min-w-full items-center justify-center px-8">
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">apartment</span>
+                    <span className="text-xl font-bold text-gray-700">EkoGrand</span>
+                </div>
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">king_bed</span>
+                    <span className="text-xl font-bold text-gray-700">AbujaSuites</span>
+                </div>
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">water_lux</span>
+                    <span className="text-xl font-bold text-gray-700">LagosCoast</span>
+                </div>
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">deck</span>
+                    <span className="text-xl font-bold text-gray-700">IkejaRoyal</span>
+                </div>
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">villa</span>
+                    <span className="text-xl font-bold text-gray-700">MainlandInn</span>
+                </div>
+                 {/* Duplicates for spacing in loop */}
+                 <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">star</span>
+                    <span className="text-xl font-bold text-gray-700">SecureStay</span>
+                </div>
+            </div>
+
+            <div className="absolute top-0 animate-marquee2 flex whitespace-nowrap gap-16 min-w-full items-center justify-center px-8" aria-hidden="true">
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">apartment</span>
+                    <span className="text-xl font-bold text-gray-700">EkoGrand</span>
+                </div>
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">king_bed</span>
+                    <span className="text-xl font-bold text-gray-700">AbujaSuites</span>
+                </div>
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">water_lux</span>
+                    <span className="text-xl font-bold text-gray-700">LagosCoast</span>
+                </div>
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">deck</span>
+                    <span className="text-xl font-bold text-gray-700">IkejaRoyal</span>
+                </div>
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">villa</span>
+                    <span className="text-xl font-bold text-gray-700">MainlandInn</span>
+                </div>
+                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-blue-600">star</span>
+                    <span className="text-xl font-bold text-gray-700">SecureStay</span>
+                </div>
+            </div>
+        </div>
+        
+        {/* CSS for Marquee Animation */}
+        <style>{`
+            @keyframes marquee {
+                0% { transform: translateX(0%); }
+                100% { transform: translateX(-100%); }
+            }
+            @keyframes marquee2 {
+                0% { transform: translateX(100%); }
+                100% { transform: translateX(0%); }
+            }
+            .animate-marquee {
+                animation: marquee 25s linear infinite;
+            }
+            .animate-marquee2 {
+                animation: marquee2 25s linear infinite;
+            }
+        `}</style>
       </div>
 
       {/* Why SecureStay Section */}

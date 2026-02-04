@@ -16,66 +16,91 @@ const Dashboard = () => {
   const [pieData, setPieData] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [bookings, setBookings] = useState([]); // <--- Added missing state for bookings
 
   useEffect(() => {
-    const unsubscribe = subscribeToBookings((bookings) => {
+    // Subscribe to real-time updates
+    const unsubscribe = subscribeToBookings((data) => {
+        setBookings(data);
+        
         // 1. Calculate Stats
-        const total = bookings.length;
-        const alerts = bookings.filter(b => b.status === 'Under Review' || b.fraudScore > 20).length;
-        const attempts = bookings.filter(b => b.fraudScore > 80).length;
-        const confirmed = bookings.filter(b => b.status === 'Confirmed').length;
-        const rate = total > 0 ? ((confirmed / total) * 100).toFixed(1) : 0;
+        const total = data.length;
+        const fraudulent = data.filter(b => b.status === 'Rejected' || b.fraudScore > 80).length;
+        const warnings = data.filter(b => b.status === 'Under Review').length;
+        const confirmed = data.filter(b => b.status === 'Confirmed').length;
+        
+        const verRate = total > 0 ? Math.round((confirmed / total) * 100) : 100;
 
         setStats({
             totalBookings: total,
-            activeAlerts: alerts,
-            fraudAttempts: attempts,
-            verificationRate: rate
+            activeAlerts: warnings,
+            fraudAttempts: fraudulent,
+            verificationRate: verRate
         });
 
-        // 2. Recent Bookings (Top 5)
-        setRecentAct(bookings.slice(0, 5));
-
-        // 3. Pie Chart (Distribution)
-        const safe = bookings.filter(b => b.fraudScore <= 20).length;
-        const moderate = bookings.filter(b => b.fraudScore > 20 && b.fraudScore <= 80).length;
-        const critical = bookings.filter(b => b.fraudScore > 80).length;
-
-        setPieData([
-            { name: 'Safe', value: safe, color: '#10B981' },
-            { name: 'Moderate Risk', value: moderate, color: '#F59E0B' },
-            { name: 'Critical Risk', value: critical, color: '#EF4444' },
-        ]);
-
-        // 4. Area Chart (Mock trend based on data presence or generated)
-        // Since we don't have historical data aggregation in this simple hook, 
-        // we'll preserve the placeholder logic if empty, or map real dates if possible.
-        // For now, let's keep a static placeholder if no data, or simple map.
-        if (total === 0) {
-             setChartData([
-                { day: '01', attempts: 0, verified: 0 },
-                { day: '05', attempts: 0, verified: 0 },
-                { day: '10', attempts: 0, verified: 0 },
-                { day: '15', attempts: 0, verified: 0 },
-                { day: '20', attempts: 0, verified: 0 },
-                { day: '25', attempts: 0, verified: 0 },
-                { day: '30', attempts: 0, verified: 0 },
-             ]);
-        } else {
-             // Simple visualization: just show flat line roughly matching current state
-             setChartData([
-                { day: 'Mon', attempts: Math.floor(attempts/4), verified: Math.floor(confirmed/4) },
-                { day: 'Tue', attempts: Math.floor(attempts/3), verified: Math.floor(confirmed/3) },
-                { day: 'Wed', attempts: Math.floor(attempts/2), verified: Math.floor(confirmed/2) },
-                { day: 'Thu', attempts: attempts, verified: confirmed },
-             ]);
-        }
+        // 2. Calculate Pie Chart Data
+        const pData = [
+            { name: 'Safe', value: confirmed, color: '#10B981' },
+            { name: 'Under Review', value: warnings, color: '#F59E0B' },
+            { name: 'High Risk', value: fraudulent, color: '#EF4444' }
+        ].filter(item => item.value > 0);
         
+        setPieData(pData.length > 0 ? pData : [{ name: 'No Data', value: 1, color: '#e5e7eb' }]);
+
+        // 3. Calculate Area Chart Data (Last 7 Days)
+        const last7Days = [...Array(7)].map((_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (6 - i));
+            return d.toISOString().split('T')[0]; // YYYY-MM-DD
+        });
+
+        const cData = last7Days.map(dateStr => {
+            // Find bookings for this date (using simple string match)
+            // Note: This relies on b.createdAt being converted properly or b.date being YYYY-MM-DD
+            // If b.createdAt is Firestore Timestamp:
+            const dayBookings = data.filter(b => {
+                if(!b.createdAt) return false;
+                // Handle Firestore Timestamp vs Date obj vs String
+                let bDateVal = b.createdAt; 
+                if (b.createdAt.toDate) bDateVal = b.createdAt.toDate();
+                else if (typeof b.createdAt === 'string') bDateVal = new Date(b.createdAt);
+                
+                // Safety check
+                if (!(bDateVal instanceof Date) || isNaN(bDateVal)) return false;
+
+                return bDateVal.toISOString().split('T')[0] === dateStr;
+            });
+
+            return {
+                day: dateStr.split('-')[2], // Just the day number
+                attempts: dayBookings.filter(b => b.fraudScore > 50).length,
+                verified: dayBookings.filter(b => b.fraudScore <= 20).length
+            };
+        });
+        
+        setChartData(cData);
         setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
+
+  // Helper for table: Get top 5 recent
+  const recentBookings = bookings.slice(0, 5); 
+
+  // Helper for charts (Fallback/Mock structure if needed, renamed to avoid conflict)
+  const mockChartData = [
+    { day: '01', attempts: 0, verified: 0 },
+    { day: '05', attempts: 0, verified: 0 },
+    { day: '10', attempts: 0, verified: 0 },
+    { day: '15', attempts: 0, verified: 0 },
+    { day: '20', attempts: 0, verified: 0 },
+    { day: '25', attempts: 0, verified: 0 },
+    { day: '30', attempts: 0, verified: 0 },
+  ];
+
+  // Use state data if available, otherwise mock
+  const displayChartData = chartData.length > 0 ? chartData : mockChartData;
 
   return (
     <div className="space-y-8">
@@ -162,7 +187,7 @@ const Dashboard = () => {
               
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart data={displayChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorFraud" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#EF4444" stopOpacity={0.1}/>
