@@ -68,7 +68,7 @@ const RoomSelection = () => {
                                 </div>
                             </div>
                             <button 
-                                onClick={() => navigate('/booking')} 
+                                onClick={() => navigate('/booking', { state: { hotel, room } })} 
                                 className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-md"
                             >
                                 Book This Room

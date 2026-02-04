@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useScrollObserver } from '../../hooks/useScrollObserver';
 import { predictFraud } from '../../services/fraudService';
 import { createBooking } from '../../services/bookingService';
 
 const GuestFormPage = () => {
   useScrollObserver();
+  const location = useLocation();
+  const navigate = useNavigate();
   
+  // Get passed data or fallback
+  const { hotel, room } = location.state || {};
+
+  // Redirect if no data (optional, or show empty state)
+  useEffect(() => {
+      if (!hotel || !room) {
+          // navigate('/hotels'); // Uncomment to force redirect
+      }
+  }, [hotel, room, navigate]);
+
   const [step, setStep] = useState(1);
   const [bookingStatus, setBookingStatus] = useState('idle'); // idle, review, success
   const [bookingRef, setBookingRef] = useState('');
   const [ipAddress, setIpAddress] = useState('');
+  const [errors, setErrors] = useState({});
   
   const [formData, setFormData] = useState({
     fullname: '',
@@ -28,6 +42,7 @@ const GuestFormPage = () => {
     billingCountry: 'Nigeria' 
   });
 
+
   // Calculate Fraud Signals
   useEffect(() => {
     // 1. Get IP
@@ -43,8 +58,9 @@ const GuestFormPage = () => {
   }, []);
 
   const getFraudSignals = () => {
-     // High Value: Room Price = 985,000. Threshold = 500,000
-     const high_value_booking = 1;
+     // High Value: Room Price > 500k
+     const price = room ? room.price : 985000;
+     const high_value_booking = price > 500000 ? 1 : 0;
 
      // Odd Hour: Between 11PM (23) and 6AM (6)
      const hour = new Date().getHours();
@@ -58,13 +74,7 @@ const GuestFormPage = () => {
         if (diff < 10 * 60 * 1000) rapid_attempts = 1; 
      }
 
-     // Device Change: (Simulated) - In real app, check fingerprint vs user history
-     // Here checking if deviceId was just created (this session) could be a proxy, 
-     // but simplest is just randomly assigning or assuming 0 for verified device.
-     // Let's assume 1 if no history found.
      const device_change = 0; 
-
-     // IP Risk: Mock check (e.g. if IP is not from expected region)
      const ip_risk = 0; 
      
      return {
@@ -83,48 +93,97 @@ const GuestFormPage = () => {
       ...prev,
       [name]: value
     }));
+    // Clear error when user types
+    if (errors[name]) {
+        setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
-  const handleNextStep = () => {
-    // Basic validation could go here
-    setStep(2);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const validateStep1 = () => {
+      const newErrors = {};
+      
+      if (!formData.fullname.trim()) newErrors.fullname = "Full name is required";
+      if (!formData.email.trim()) newErrors.email = "Email is required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Please enter a valid email address";
+      
+      if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
+      else if (formData.phone.length < 10) newErrors.phone = "Please enter a valid phone number";
+
+      if (!formData.idNumber.trim()) newErrors.idNumber = "Govt ID Number is required";
+      
+      return newErrors;
+  };
+  
+  const validateStep2 = () => {
+      const newErrors = {};
+      // Basic Payment Validation (Demo)
+      if (formData.paymentType !== 'transfer') {
+          if(!formData.cardNumber.trim() || formData.cardNumber.length < 12) newErrors.cardNumber = "Valid card number required";
+          if(!formData.expiry.trim()) newErrors.expiry = "Expiry date required";
+          if(!formData.cvc.trim() || formData.cvc.length < 3) newErrors.cvc = "Valid CVC required";
+      }
+      // Usually Billing Country is prefilled or selected, check if valid
+      if(!formData.billingCountry) newErrors.billingCountry = "Billing country is required";
+
+      return newErrors;
   };
 
   const handlePrevStep = () => {
-    setStep(1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+      setStep(1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Capture current attempt time
-    localStorage.setItem('last_booking_attempt', Date.now().toString());
+  const handleNextStep = () => {
+    // Validation for Step 1
+    const validationErrors = validateStep1();
+    if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        setErrors({});
+        setStep(2);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
-    // Generate Reference
-    const ref = "REF-" + Math.floor(100000 + Math.random() * 900000);
-    setBookingRef(ref);
-    setBookingStatus('review');
+  const handleSubmit = async (e) => {
+      e.preventDefault();
+      
+      const validationErrors = validateStep2();
+      if (Object.keys(validationErrors).length > 0) {
+          setErrors(validationErrors);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+      }
+      
+      await processBooking();
+  };
 
-    // 1. Get Signals
-    const fraudSignals = getFraudSignals();
-    
-    // 2. Call AI Service & Save to Firestore
-    // Note: We use an async function inside here to not block the UI 'review' state
-    const processBooking = async () => {
+  const processBooking = async () => {
        try {
-          // A. Get Risk Score from Python API
-          const riskScore = await predictFraud(fraudSignals);
-          const finalScore = Math.round(riskScore * 100); // 0.85 -> 85
+          // Capture current attempt time
+          localStorage.setItem('last_booking_attempt', Date.now().toString());
+
+          // Generate Reference
+          const ref = "REF-" + Math.floor(100000 + Math.random() * 900000);
+          setBookingRef(ref);
+          setBookingStatus('review');
           
-          // B. Determine Status based on Score
-          // > 80 = Review/Reject, < 20 = Auto Confirm
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+
+          // 1. Get Signals
+          const fraudSignals = getFraudSignals();
+          
+          // 2. Call AI Service
+          const riskScore = await predictFraud(fraudSignals);
+          const finalScore = Math.round(riskScore * 100); 
+          
+          // 3. Determine Status
           let status = 'Confirmed';
           if (finalScore > 80) status = 'Rejected'; 
           else if (finalScore > 20) status = 'Under Review';
 
-          // C. Prepare Data Analysis for Admin View
+          // 4. Prepare Analysis
           const reasons = [];
           if(fraudSignals.ip_risk) reasons.push('High Risk IP detected');
           if(fraudSignals.odd_hour) reasons.push('Booking placed at unusual hour');
@@ -136,39 +195,39 @@ const GuestFormPage = () => {
              guestName: formData.fullname,
              email: formData.email,
              phone: formData.phone,
-             roomType: 'Grand Horizon Suite', 
-             checkIn: '2024-03-20',
-             checkOut: '2024-03-25',
-             amount: 985000,
+             
+             // Dynamic Data
+             roomType: room ? room.name : 'Standard Room', 
+             checkIn: '2026-02-04', // Should normally come from search params
+             checkOut: '2026-02-06',
+             amount: room ? room.price : 50000,
+             hotelName: hotel ? hotel.name : 'SecureStay Hotel',
+             
              status: status,
              fraudScore: finalScore,
              bookingChannel: 'Web',
-             ipAddress: ipAddress,
+             ipAddress: ipAddress || '102.12.54.21',
              fraudAnalysis: {
                 reasons: reasons.length > 0 ? reasons : ['Standard transaction pattern'],
                 riskFactors: reasons
              },
-             rawSignals: fraudSignals
+             rawSignals: fraudSignals,
+             createdAt: new Date()
           };
 
-          // D. Save to DB
+          // 5. Save to DB
           await createBooking(bookingPayload);
           
-          // E. Update UI (After artificial delay for user experience)
+          // 6. Update UI with artificial delay to show "Reviewing..."
           setTimeout(() => {
-              // If status is rejected, maybe show a different screen? 
-              // For this demo, we'll show success but maybe with a note if under review.
               setBookingStatus('success'); 
-              window.scrollTo({ top: 0, behavior: 'smooth' });
           }, 3000);
 
        } catch (error) {
           console.error("Booking Process Failed", error);
-          // Handle fail state
+          alert("Something went wrong. Please try again.");
+          setBookingStatus('idle');
        }
-    };
-    
-    processBooking();
   };
 
   if (bookingStatus === 'review') {
@@ -176,15 +235,15 @@ const GuestFormPage = () => {
       <div className="bg-background-light text-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
         
          <div className="max-w-4xl w-full space-y-8 mt-16 md:mt-0">
-            <div className="bg-surface-light shadow-xl rounded-lg overflow-hidden border border-gray-100">
+            <div className="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100">
                <div className="p-8 sm:p-10">
                    <div className="text-center mb-10">
-                       <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-amber-100 mb-6">
+                       <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-amber-100 mb-6 animate-pulse">
                            <span className="material-icons-outlined text-amber-500 text-5xl">gpp_maybe</span>
                        </div>
-                       <h1 className="text-3xl font-bold text-gray-900 mb-3">Your booking is under review</h1>
+                       <h1 className="text-3xl font-bold text-gray-900 mb-3 animate-pulse">Analyzing security signals...</h1>
                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                           For your safety, we are currently performing a standard security verification on your reservation.
+                           We are verifying your identity and securing the transaction with AI.
                        </p>
                    </div>
 
@@ -197,18 +256,18 @@ const GuestFormPage = () => {
                            <div className="flex items-start space-x-4">
                                <div className="flex-shrink-0">
                                    <img 
-                                        alt="Hotel exterior" 
+                                        alt={room?.name || "Hotel exterior"} 
                                         className="h-24 w-32 object-cover rounded-md shadow-sm" 
-                                        src="/Rooms/Room-1.jpg"
+                                        src={room?.image || "/Rooms/Room-1.jpg"}
                                         onError={(e) => {e.target.src = "https://lh3.googleusercontent.com/aida-public/AB6AXuDg8_4E15ot6BLCvN4x38UJLWVmDC7p_GmIo_wj1v3xwEV6VS_TLwjAYyzU2zp_dZGLhgAn-SVp3IHQ_uShK2gtQCV-0a42LMxGcTR3Nqak9K48YNt6sbCUYTkaxGxwEfrCWAHbzhCPE9ljCGyucW8SOPqZp0kKrMLDRAUbWp4W11gCclNT2javqdkNmt5DgdoLRelX0PNHq_Nih1MVRW8suuuEFAIu9F2FFhtLbr5up9leyfxsMK26jyn5eXd8XlbhaCvjJ9sCYgUr"}}
                                     />
                                </div>
                                <div>
-                                   <h3 className="text-lg font-medium text-gray-900">Grand Horizon Suite</h3>
-                                   <p className="text-sm text-gray-500">Victoria Island, Lagos</p>
+                                   <h3 className="text-lg font-medium text-gray-900">{room?.name || 'Selected Room'}</h3>
+                                   <p className="text-sm text-gray-500">{hotel?.name || 'Grand Horizon Hotel'}</p>
                                    <p className="text-sm text-gray-500 mt-1 flex items-center">
                                        <span className="material-icons-outlined text-xs mr-1">location_on</span>
-                                       123 Coastal Highway
+                                       {hotel?.location || 'Victoria Island, Lagos'}
                                    </p>
                                </div>
                            </div>
@@ -216,7 +275,7 @@ const GuestFormPage = () => {
                            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                                <div className="flex justify-between text-sm">
                                    <span className="text-gray-500">Check-in</span>
-                                   <span className="font-medium text-gray-900">Today</span>
+                                   <span className="font-medium text-gray-900">{new Date().toLocaleDateString()}</span>
                                </div>
                                <div className="flex justify-between text-sm">
                                    <span className="text-gray-500">Guests</span>
@@ -224,7 +283,7 @@ const GuestFormPage = () => {
                                </div>
                                <div className="border-t border-gray-200 pt-3 flex justify-between text-sm">
                                    <span className="text-gray-500">Total</span>
-                                   <span className="font-bold text-gray-900">₦985,000</span>
+                                   <span className="font-bold text-gray-900">₦{room?.price?.toLocaleString() || '0'}</span>
                                </div>
                            </div>
                            
@@ -342,25 +401,25 @@ const GuestFormPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             {/* Hotel Info */}
                             <div className="col-span-1 md:col-span-2 flex items-start gap-4 pb-4 border-b border-gray-100 md:pb-6 print:border-black">
-                                <div className="w-20 h-20 bg-cover bg-center rounded-lg shrink-0 bg-gray-200 print:hidden" style={{backgroundImage: "url('/Rooms/Room-1.jpg')"}}></div>
+                                <div className="w-20 h-20 bg-cover bg-center rounded-lg shrink-0 bg-gray-200 print:hidden" style={{backgroundImage: `url('${room?.image || '/Rooms/Room-1.jpg'}')`}}></div>
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">Hotel</p>
-                                    <p className="text-lg font-bold text-gray-900 leading-tight">Grand Horizon Hotel</p>
+                                    <p className="text-lg font-bold text-gray-900 leading-tight">{hotel?.name || 'Grand Horizon Hotel'}</p>
                                     <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                                         <span className="material-icons-outlined text-sm">location_on</span>
-                                        Victoria Island, Lagos
+                                        {hotel?.location || 'Victoria Island, Lagos'}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex flex-col gap-1">
                                 <p className="text-sm font-medium text-gray-500">Check-in</p>
-                                <p className="text-base font-semibold text-gray-900">Oct 24, 2026</p>
+                                <p className="text-base font-semibold text-gray-900">{new Date().toLocaleDateString()}</p>
                                 <p className="text-xs text-gray-500">After 2:00 PM</p>
                             </div>
                             <div className="flex flex-col gap-1">
                                 <p className="text-sm font-medium text-gray-500">Check-out</p>
-                                <p className="text-base font-semibold text-gray-900">Oct 28, 2026</p>
+                                <p className="text-base font-semibold text-gray-900">{new Date(Date.now() + 2 * 86400000).toLocaleDateString()}</p>
                                 <p className="text-xs text-gray-500">Before 11:00 AM</p>
                             </div>
                             <div className="flex flex-col gap-1">
@@ -382,7 +441,7 @@ const GuestFormPage = () => {
                             </div>
                             <div className="flex flex-col gap-1 pt-4 border-t border-gray-100 md:border-none md:pt-0 print:border-black">
                                 <p className="text-sm font-medium text-gray-500">Total Price</p>
-                                <p className="text-2xl font-bold text-primary">₦985,000</p>
+                                <p className="text-2xl font-bold text-primary">₦{room?.price?.toLocaleString() || '0'}</p>
                             </div>
                         </div>
                     </div>
@@ -426,7 +485,7 @@ const GuestFormPage = () => {
             <span className="mx-2 material-icons-outlined text-base">chevron_right</span>
             <a href="/hotels" className="hover:text-primary transition-colors">Hotels</a>
             <span className="mx-2 material-icons-outlined text-base">chevron_right</span>
-             <span className="whitespace-nowrap">Grand Horizon</span>
+             <span className="whitespace-nowrap">{hotel?.name || 'Hotel'}</span>
              <span className="mx-2 material-icons-outlined text-base">chevron_right</span>
              <span className="whitespace-nowrap">Select Room</span>
             <span className="mx-2 material-icons-outlined text-base">chevron_right</span>
@@ -444,9 +503,9 @@ const GuestFormPage = () => {
             <div className="bg-surface-light rounded-xl shadow-lg overflow-hidden border border-gray-100 sticky top-24">
               <div className="relative h-48">
                 <img 
-                  alt="Luxury Hotel Room" 
+                  alt={room?.name || "Luxury Hotel Room"} 
                   className="w-full h-full object-cover" 
-                  src="/Rooms/Room-1.jpg" 
+                  src={room?.image || "/Rooms/Room-1.jpg"} 
                   onError={(e) => {e.target.src = "https://lh3.googleusercontent.com/aida-public/AB6AXuDg8_4E15ot6BLCvN4x38UJLWVmDC7p_GmIo_wj1v3xwEV6VS_TLwjAYyzU2zp_dZGLhgAn-SVp3IHQ_uShK2gtQCV-0a42LMxGcTR3Nqak9K48YNt6sbCUYTkaxGxwEfrCWAHbzhCPE9ljCGyucW8SOPqZp0kKrMLDRAUbWp4W11gCclNT2javqdkNmt5DgdoLRelX0PNHq_Nih1MVRW8suuuEFAIu9F2FFhtLbr5up9leyfxsMK26jyn5eXd8XlbhaCvjJ9sCYgUr"}}
                 />
                 <div className="absolute top-0 right-0 bg-accent text-white text-xs font-bold px-3 py-1 m-4 rounded-full">
@@ -454,17 +513,17 @@ const GuestFormPage = () => {
                 </div>
               </div>
               <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-1">Grand Horizon Suite</h3>
-                <p className="text-sm text-gray-500 mb-4">Victoria Island, Lagos</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">{room?.name || 'Selected Room'}</h3>
+                <p className="text-sm text-gray-500 mb-4">{hotel?.location || 'Victoria Island, Lagos'}</p>
                 
                 <div className="border-t border-gray-200 py-4 space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Check-in</span>
-                    <span className="font-medium text-gray-900">Oct 24, 2023</span>
+                    <span className="font-medium text-gray-900">{new Date().toLocaleDateString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Check-out</span>
-                    <span className="font-medium text-gray-900">Oct 28, 2023</span>
+                    <span className="font-medium text-gray-900">{new Date(Date.now() + 2 * 86400000).toLocaleDateString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Guests</span>
@@ -475,7 +534,7 @@ const GuestFormPage = () => {
                 <div className="border-t border-gray-200 pt-4 mt-2">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Total</span>
-                    <span className="text-2xl font-bold text-primary">₦985,000</span>
+                    <span className="text-2xl font-bold text-primary">₦{room?.price?.toLocaleString() || '0'}</span>
                   </div>
                   <div className="text-xs text-gray-400">Includes VAT and consumption tax</div>
                 </div>
@@ -529,11 +588,12 @@ const GuestFormPage = () => {
                             id="fullname"
                             value={formData.fullname}
                             onChange={handleChange}
-                            className="block w-full pl-10 sm:text-sm border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-primary focus:border-primary py-3"
+                            className={`block w-full pl-10 sm:text-sm border ${errors.fullname ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                             placeholder="Chinedu Okafor"
                             required
                           />
                         </div>
+                        {errors.fullname && <p className="mt-1 text-xs text-red-600">{errors.fullname}</p>}
                       </div>
 
                       <div className="col-span-1 md:col-span-2">
@@ -548,11 +608,12 @@ const GuestFormPage = () => {
                             id="email"
                             value={formData.email}
                             onChange={handleChange}
-                            className="block w-full pl-10 sm:text-sm border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-primary focus:border-primary py-3"
+                            className={`block w-full pl-10 sm:text-sm border ${errors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                             placeholder="c.okafor@example.com"
                             required
                           />
                         </div>
+                        {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
                       </div>
 
                       <div className="col-span-1">
@@ -581,10 +642,11 @@ const GuestFormPage = () => {
                           id="phone"
                           value={formData.phone}
                           onChange={handleChange}
-                          className="block w-full sm:text-sm border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-primary focus:border-primary py-3"
+                          className={`block w-full sm:text-sm border ${errors.phone ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                           placeholder="+234 801 234 5678"
                           required
                         />
+                        {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
                       </div>
                       
                       {/* Added ID Verification Field for Fraud Check Completeness */}
@@ -611,10 +673,11 @@ const GuestFormPage = () => {
                           id="idNumber"
                           value={formData.idNumber}
                           onChange={handleChange}
-                          className="block w-full sm:text-sm border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-primary focus:border-primary py-3"
+                          className={`block w-full sm:text-sm border ${errors.idNumber ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                           placeholder="A01234567"
                           required
                         />
+                        {errors.idNumber && <p className="mt-1 text-xs text-red-600">{errors.idNumber}</p>}
                       </div>
 
                     </div>
@@ -738,51 +801,67 @@ const GuestFormPage = () => {
                           <p className="mt-1 text-xs text-gray-500">Used for fraud detection cross-referencing.</p>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <div className="col-span-3">
-                          <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="card-number">Card Number</label>
-                          <input 
-                            type="text" 
-                            name="cardNumber" 
-                            id="card-number"
-                            value={formData.cardNumber}
-                            onChange={handleChange}
-                            className="block w-full sm:text-sm border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-primary focus:border-primary py-3"
-                            placeholder="0000 0000 0000 0000"
-                          />
-                        </div>
-                        
-                        <div className="col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="expiry">Expiration Date</label>
-                          <input 
-                            type="text" 
-                            name="expiry" 
-                            id="expiry"
-                            value={formData.expiry}
-                            onChange={handleChange}
-                            className="block w-full sm:text-sm border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-primary focus:border-primary py-3"
-                            placeholder="MM / YY"
-                          />
-                        </div>
-                        
-                        <div className="col-span-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="cvc">CVV</label>
-                          <div className="relative">
+                      {formData.paymentType !== 'transfer' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <div className="col-span-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="card-number">Card Number</label>
                             <input 
                               type="text" 
-                              name="cvc" 
-                              id="cvc"
-                              value={formData.cvc}
+                              name="cardNumber" 
+                              id="card-number"
+                              value={formData.cardNumber}
                               onChange={handleChange}
-                              className="block w-full sm:text-sm border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-primary focus:border-primary py-3"
-                              placeholder="123"
+                              className={`block w-full sm:text-sm border ${errors.cardNumber ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
+                              placeholder="0000 0000 0000 0000"
                             />
-                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer group">
-                              <span className="material-icons-outlined text-gray-400 text-sm group-hover:text-primary">help_outline</span>
+                            {errors.cardNumber && <p className="mt-1 text-xs text-red-600">{errors.cardNumber}</p>}
+                          </div>
+                          
+                          <div className="col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="expiry">Expiration Date</label>
+                            <input 
+                              type="text" 
+                              name="expiry" 
+                              id="expiry"
+                              value={formData.expiry}
+                              onChange={handleChange}
+                              className={`block w-full sm:text-sm border ${errors.expiry ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
+                              placeholder="MM / YY"
+                            />
+                            {errors.expiry && <p className="mt-1 text-xs text-red-600">{errors.expiry}</p>}
+                          </div>
+                          
+                          <div className="col-span-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="cvc">CVV</label>
+                            <div className="relative">
+                              <input 
+                                type="text" 
+                                name="cvc" 
+                                id="cvc"
+                                value={formData.cvc}
+                                onChange={handleChange}
+                                className={`block w-full sm:text-sm border ${errors.cvc ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
+                                placeholder="123"
+                              />
+                                {errors.cvc && <p className="absolute -bottom-5 text-xs text-red-600">{errors.cvc}</p>}
+                              <div className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer group">
+                                <span className="material-icons-outlined text-gray-400 text-sm group-hover:text-primary">help_outline</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-6 text-center">
+                            <span className="material-icons-outlined text-4xl text-blue-500 mb-2">account_balance</span>
+                            <h4 className="text-lg font-medium text-gray-900">Bank Transfer Details</h4>
+                            <p className="text-sm text-gray-600 mb-4">You will receive an email with our bank details after confirming your booking.</p>
+                            <div className="text-xs text-gray-500 bg-white p-3 rounded border border-gray-200 inline-block">
+                                <p>Bank: GTBank</p>
+                                <p>Account: SecureStay Ltd</p>
+                                <p>Number: **********</p>
+                            </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="pt-6 flex gap-4">
@@ -797,7 +876,7 @@ const GuestFormPage = () => {
                         type="submit" 
                         className="w-2/3 flex justify-center py-4 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
                       >
-                        Pay ₦985,000 & Confirm
+                        Pay ₦{room?.price?.toLocaleString() || '0'} & Confirm
                       </button>
                     </div>
                     <p className="mt-4 text-center text-xs text-gray-500">

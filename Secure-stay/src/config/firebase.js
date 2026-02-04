@@ -3,13 +3,13 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBubad84nKV_vLm6eRx13nJ0u2VQhhlT-4",
-  authDomain: "stay-b5cad.firebaseapp.com",
-  projectId: "stay-b5cad",
-  storageBucket: "stay-b5cad.firebasestorage.app",
-  messagingSenderId: "838877333913",
-  appId: "1:838877333913:web:aa82609305c1803dbdeb08",
-  measurementId: "G-L4WM4S5XQD"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
