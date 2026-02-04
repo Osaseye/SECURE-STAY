@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { hotels } from '../../data/mockHotels';
 import { Star, MapPin, Filter } from 'lucide-react';
+import { useScrollObserver } from '../../hooks/useScrollObserver';
 
 const HotelSearch = () => {
   const [priceRange, setPriceRange] = useState(150000);
   const [selectedStars, setSelectedStars] = useState([]);
+  
+  useScrollObserver();
 
   const toggleStar = (star) => {
     setSelectedStars(prev => 
@@ -20,12 +23,12 @@ const HotelSearch = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8 animate-fade-in">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8">
           
           {/* Sidebar Filters */}
-          <div className="w-full lg:w-1/4 space-y-6">
+          <div className="w-full lg:w-1/4 space-y-6 opacity-0 translate-y-10 animate-on-scroll">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-24">
               <div className="flex items-center gap-2 mb-6 text-gray-900">
                 <Filter size={20} />
@@ -74,7 +77,7 @@ const HotelSearch = () => {
 
           {/* Hotel Grid */}
           <div className="w-full lg:w-3/4">
-             <div className="flex justify-between items-center mb-6">
+             <div className="flex justify-between items-center mb-6 opacity-0 translate-y-10 animate-on-scroll">
                 <h1 className="text-2xl font-bold text-gray-900">
                   {filteredHotels.length} Hotels Found
                 </h1>
@@ -87,8 +90,13 @@ const HotelSearch = () => {
              </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredHotels.map(hotel => (
-                  <Link to={`/hotels/${hotel.id}`} key={hotel.id} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col">
+                {filteredHotels.map((hotel, index) => (
+                  <Link 
+                    to={`/hotels/${hotel.id}`} 
+                    key={hotel.id} 
+                    className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col opacity-0 translate-y-10 animate-on-scroll"
+                    style={{ transitionDelay: `${index * 100}ms` }}
+                  >
                     <div className="relative h-48 overflow-hidden">
                       <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute top-3 right-3 bg-white px-2 py-1 rounded-md text-xs font-bold text-gray-900 shadow-sm">
