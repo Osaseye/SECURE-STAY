@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useScrollObserver } from '../../hooks/useScrollObserver';
 import { predictFraud } from '../../services/fraudService';
 import { createBooking, checkBookingHistory, subscribeToBookingStatus } from '../../services/bookingService';
+import Modal from '../../components/common/Modal';
 
 const GuestFormPage = () => {
   useScrollObserver();
@@ -24,6 +25,8 @@ const GuestFormPage = () => {
   const [bookingRef, setBookingRef] = useState('');
   const [ipAddress, setIpAddress] = useState('');
   const [errors, setErrors] = useState({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
   
   const [formData, setFormData] = useState({
     fullname: '',
@@ -301,7 +304,8 @@ const GuestFormPage = () => {
 
        } catch (error) {
           console.error("Booking Process Failed", error);
-          alert("Something went wrong. Please try again.");
+          setModalMessage("Something went wrong with your booking. Please check your connection and try again.");
+          setModalOpen(true);
           setBookingStatus('idle');
        }
   };
@@ -1042,6 +1046,15 @@ const GuestFormPage = () => {
           </div>
         </div>
       </main>
+
+      <Modal 
+        isOpen={modalOpen} 
+        onClose={() => setModalOpen(false)}
+        title="Error"
+        message={modalMessage}
+        type="danger"
+        cancelText="Close"
+      />
     </div>
   );
 };

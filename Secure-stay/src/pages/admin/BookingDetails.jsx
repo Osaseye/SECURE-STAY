@@ -2,12 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBookingByRef, updateBookingStatus } from '../../services/bookingService';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import Modal from '../../components/common/Modal';
 
 const BookingDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
+
+  const openModal = (title, message, type = 'info', onConfirm = null) => {
+    setModalConfig({ isOpen: true, title, message, type, onConfirm });
+  };
+
+  const closeModal = () => {
+    setModalConfig(prev => ({ ...prev, isOpen: false }));
+  };
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -26,22 +36,36 @@ const BookingDetails = () => {
     }
   }, [id]);
 
-  const handleStatusUpdate = async (newStatus) => {
-      if (!booking || !booking.firestoreId) return;
-      
-      const confirmMsg = newStatus === 'Confirmed' 
-        ? "Are you sure you want to APPROVE this booking?" 
-        : "Are you sure you want to REJECT this booking?";
-      
-      if (window.confirm(confirmMsg)) {
-          const success = await updateBookingStatus(booking.firestoreId, newStatus);
-          if (success) {
-              setBooking(prev => ({ ...prev, status: newStatus }));
-              alert(`Booking marked as ${newStatus}`);
-          } else {
-              alert("Failed to update status. Please try again.");
-          }
-      }
+  const handleStatusUpdate = (newStatus) => {
+    if (!booking || !booking.firestoreId) return;
+    
+    const confirmMsg = newStatus === 'Confirmed' 
+      ? "Are you sure you want to APPROVE this booking?" 
+      : "Are you sure you want to REJECT this booking?";
+    
+    // Open Confirmation Modal
+    openModal(
+        `Confirm ${newStatus === 'Confirmed' ? 'Approval' : 'Rejection'}`,
+        confirmMsg,
+        newStatus === 'Confirmed' ? 'info' : 'danger',
+        async () => {
+            closeModal(); // Close confirm modal
+            
+            const success = await updateBookingStatus(booking.firestoreId, newStatus);
+            if (success) {
+                setBooking(prev => ({ ...prev, status: newStatus }));
+                // Show Success Modal
+                setTimeout(() => {
+                    openModal("Success", `Booking marked as ${newStatus}`, 'info', null);
+                }, 300);
+            } else {
+                // Show Error Modal
+                setTimeout(() => {
+                    openModal("Error", "Failed to update status. Please try again.", 'danger', null);
+                }, 300);
+            }
+        }
+    );
   };
 
   if (loading) {
@@ -245,6 +269,17 @@ const BookingDetails = () => {
                        {/*  Additional fields if available in booking object */}
                        <li className="flex justify-between">
                            <span className="text-sm text-gray-500">Check In</span>
+       
+       <Modal 
+            isOpen={modalConfig.isOpen}
+            onClose={closeModal}
+            title={modalConfig.title}
+            message={modalConfig.message}
+            type={modalConfig.type}
+            onConfirm={modalConfig.onConfirm}
+            confirmText="Yes, Proceed"
+            cancelText={modalConfig.onConfirm ? "Cancel" : "Close"}
+       />
                            <span className="text-sm font-medium text-gray-900">{booking.checkIn}</span>
                        </li>
                        <li className="flex justify-between">
