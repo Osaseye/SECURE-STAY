@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useScrollObserver } from '../../hooks/useScrollObserver';
 import { predictFraud } from '../../services/fraudService';
-import { createBooking, checkBookingHistory } from '../../services/bookingService';
+import { createBooking, checkBookingHistory, subscribeToBookingStatus } from '../../services/bookingService';
 
 const GuestFormPage = () => {
   useScrollObserver();
@@ -78,21 +78,26 @@ const GuestFormPage = () => {
     const hour = new Date().getHours();
     const odd_hour = (hour >= 23 || hour <= 5) ? 1 : 0;
 
-    // 4. Rapid Booking Attempts (Check database history)
+    // 4. Rapid Booking Attempts (Check database history OR LocalStorage)
     let rapid_attempts = 0;
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     
-    // Check if user has booked in the last 24 hours with same name
-    const recentBooking = bookingHistory.find(b => {
+    // A. DB Check (By Email) - We trust the email query result
+    const recentDbBooking = bookingHistory.find(b => {
         if (!b.createdAt) return false;
-        // Check Name Match
-        const nameMatch = b.guestName && b.guestName.toLowerCase() === formData.fullname.toLowerCase();
-        // Check Time
-        const isRecent = b.createdAt > oneDayAgo;
-        return nameMatch && isRecent;
+        // Check if booking is within last 24 hours
+        return b.createdAt > oneDayAgo;
     });
 
-    if (recentBooking) {
+    // B. Local Check (By Device/Time)
+    const lastBookingTimeLocal = localStorage.getItem('last_booking_attempt');
+    let recentLocal = false;
+    if (lastBookingTimeLocal) {
+        const diff = Date.now() - parseInt(lastBookingTimeLocal);
+        if (diff < 24 * 60 * 60 * 1000) recentLocal = true;
+    }
+
+    if (recentDbBooking || recentLocal) {
         rapid_attempts = 1; 
     }
 
@@ -124,6 +129,23 @@ const GuestFormPage = () => {
       country_mismatch
     };
   };
+
+  // Real-time status listner (for when under review)
+  useEffect(() => {
+     let unsubscribe;
+     if (bookingStatus === 'under_review' && bookingRef) {
+         unsubscribe = subscribeToBookingStatus(bookingRef, (status) => {
+             if (status === 'Confirmed') {
+                 setBookingStatus('success');
+             } else if (status === 'Rejected') {
+                 setBookingStatus('rejected');
+             }
+         });
+     }
+     return () => {
+         if (unsubscribe) unsubscribe();
+     }
+  }, [bookingStatus, bookingRef]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -217,7 +239,14 @@ const GuestFormPage = () => {
           
           // 2. Call AI Service
           const riskScore = await predictFraud(fraudSignals);
-          const finalScore = Math.round(riskScore * 100); 
+          let finalScore = Math.round(riskScore * 100); 
+
+          // Logic Override: If we have multiple strong signals but score is low, boost it.
+          // This ensures client-side rules are respected even if AI model is conservative
+          const riskCount = Object.values(fraudSignals).reduce((a, b) => a + b, 0);
+          if (riskCount >= 2 && finalScore < 50) {
+              finalScore = Math.max(finalScore, 40 + (riskCount * 10)); 
+          }
           
           // 3. Determine Status
           let status = 'Confirmed';
@@ -261,7 +290,13 @@ const GuestFormPage = () => {
           
           // 6. Update UI with artificial delay to show "Reviewing..."
           setTimeout(() => {
-              setBookingStatus('success'); 
+              if (status === 'Confirmed') {
+                  setBookingStatus('success'); 
+              } else if (status === 'Under Review') {
+                  setBookingStatus('under_review');
+              } else {
+                  setBookingStatus('rejected');
+              }
           }, 3000);
 
        } catch (error) {
@@ -513,6 +548,83 @@ const GuestFormPage = () => {
              </div>
         </div>
       );
+  }
+
+  // Handle Under Review
+  if (bookingStatus === 'under_review') {
+    return (
+        <div className="bg-background-light text-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="max-w-xl w-full text-center">
+            <div className="bg-white p-8 rounded-xl shadow-lg border-t-4 border-amber-500">
+                <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-amber-100 mb-6">
+                    <span className="material-icons-outlined text-amber-500 text-5xl">pending_actions</span>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Booking Under Review</h1>
+                <p className="text-gray-600 mb-8 max-w-sm mx-auto">
+                    Our security system has flagged this transaction for manual verification. 
+                </p>
+
+                <div className="bg-amber-50 rounded-lg p-4 text-left mb-8">
+                    <h3 className="font-semibold text-amber-800 text-sm mb-2 flex items-center">
+                        <span className="material-icons-outlined text-sm mr-2">info</span>
+                        Next Steps
+                    </h3>
+                    <ul className="text-sm text-amber-700 space-y-2 list-disc list-inside">
+                        <li>An agent will review your details shortly.</li>
+                        <li>You may receive a call to verify your identity.</li>
+                        <li>Do not attempt to book again immediately.</li>
+                    </ul>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                     <button  
+                        className="w-full h-12 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold rounded-lg transition-colors"
+                        onClick={() => navigate('/')}
+                    >
+                        Return to Home
+                    </button>
+                    <button className="text-primary text-sm hover:underline mt-2">
+                        Contact Support for Assistance
+                    </button>
+                </div>
+            </div>
+             <p className="mt-8 text-sm text-gray-400">Reference ID: {bookingRef}</p>
+        </div>
+        </div>
+    );
+  }
+
+  // Handle Rejected
+  if (bookingStatus === 'rejected') {
+    return (
+        <div className="bg-background-light text-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="max-w-xl w-full text-center">
+             <div className="bg-white p-8 rounded-xl shadow-lg border-t-4 border-red-500">
+                <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-100 mb-6">
+                    <span className="material-icons-outlined text-red-500 text-5xl">block</span>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Booking Declined</h1>
+                <p className="text-gray-600 mb-8">
+                    We could not process your booking at this time due to security policies.
+                </p>
+
+                <div className="bg-red-50 rounded-lg p-4 text-left mb-8">
+                    <p className="text-sm text-red-800">
+                        Our fraud detection system has identified potential risks associated with this transaction. No charge has been made to your account.
+                    </p>
+                </div>
+
+                <button 
+                     onClick={() => navigate('/')}
+                     className="w-full h-12 bg-gray-900 text-white font-bold rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                    Return to Home
+                </button>
+            </div>
+             <p className="mt-8 text-sm text-gray-400">Reference ID: {bookingRef}</p>
+        </div>
+        </div>
+    );
   }
 
   return (

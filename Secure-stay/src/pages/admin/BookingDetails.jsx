@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBookingByRef } from '../../services/bookingService';
+import { getBookingByRef, updateBookingStatus } from '../../services/bookingService';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 const BookingDetails = () => {
@@ -25,6 +25,24 @@ const BookingDetails = () => {
         fetchBooking();
     }
   }, [id]);
+
+  const handleStatusUpdate = async (newStatus) => {
+      if (!booking || !booking.firestoreId) return;
+      
+      const confirmMsg = newStatus === 'Confirmed' 
+        ? "Are you sure you want to APPROVE this booking?" 
+        : "Are you sure you want to REJECT this booking?";
+      
+      if (window.confirm(confirmMsg)) {
+          const success = await updateBookingStatus(booking.firestoreId, newStatus);
+          if (success) {
+              setBooking(prev => ({ ...prev, status: newStatus }));
+              alert(`Booking marked as ${newStatus}`);
+          } else {
+              alert("Failed to update status. Please try again.");
+          }
+      }
+  };
 
   if (loading) {
       return (
@@ -83,12 +101,18 @@ const BookingDetails = () => {
               <p className="text-gray-500 mt-1">Created on {formattedDate}</p>
           </div>
           <div className="flex gap-3">
-              {booking.status === 'Under Review' && (
+              {(booking.status === 'Under Review' || booking.status === 'Pending') && (
                   <>
-                    <button className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 shadow-sm transition-colors">
+                    <button 
+                        onClick={() => handleStatusUpdate('Rejected')}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 shadow-sm transition-colors"
+                    >
                         Reject Booking
                     </button>
-                    <button className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-sm transition-colors">
+                    <button 
+                        onClick={() => handleStatusUpdate('Confirmed')}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-sm transition-colors"
+                    >
                         Approve Booking
                     </button>
                   </>

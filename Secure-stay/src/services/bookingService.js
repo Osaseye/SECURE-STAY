@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { collection, addDoc, getDocs, doc, getDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, getDoc, updateDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, where } from 'firebase/firestore';
 
 const COLLECTION_NAME = 'bookings';
 
@@ -79,5 +79,30 @@ export const subscribeToBookings = (callback) => {
             });
         });
         callback(bookings);
+    });
+};
+
+// Update status
+export const updateBookingStatus = async (firestoreId, newStatus) => {
+    try {
+        const bookingRef = doc(db, COLLECTION_NAME, firestoreId);
+        await updateDoc(bookingRef, {
+            status: newStatus
+        });
+        return true;
+    } catch (error) {
+        console.error("Error updating booking:", error);
+        return false;
+    }
+};
+
+// Listen to single booking status (reference ID based)
+export const subscribeToBookingStatus = (refId, callback) => {
+    const q = query(collection(db, COLLECTION_NAME), where("id", "==", refId));
+    return onSnapshot(q, (snapshot) => {
+        if (!snapshot.empty) {
+            const data = snapshot.docs[0].data();
+            callback(data.status);
+        }
     });
 };
