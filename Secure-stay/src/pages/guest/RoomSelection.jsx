@@ -69,7 +69,7 @@ const RoomSelection = () => {
                             </div>
                             <button 
                                 onClick={() => navigate('/booking', { state: { hotel, room } })} 
-                                className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-md"
+                                className="w-full md:w-auto bg-blue-600 text-white px-6 py-2 md:px-8 md:py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-md text-sm md:text-base mt-2 md:mt-0"
                             >
                                 Book This Room
                             </button>

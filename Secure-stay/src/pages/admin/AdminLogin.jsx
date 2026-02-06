@@ -21,9 +21,9 @@ const AdminLogin = () => {
     setLoading(true);
     setError('');
 
-    // Predefined Credentials
-    const ADMIN_EMAIL = 'admin@securestay.ng';
-    const ADMIN_PASS = 'secure123';
+    // Predefined Credentials (Loaded from Environment)
+    const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+    const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASSWORD;
 
     setTimeout(() => {
         if (email === ADMIN_EMAIL && password === ADMIN_PASS) {

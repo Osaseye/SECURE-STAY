@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import ScrollToTop from './components/ScrollToTop';
 import GuestLayout from './layouts/GuestLayout';
 import AdminLayout from './layouts/AdminLayout';
 import LandingPage from './pages/guest/LandingPage';
@@ -18,6 +19,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       {/* Admin Login Route - Independent */}
       <Route path="/admin" element={<AdminLogin />} />
@@ -43,6 +46,7 @@ function App() {
       {/* Fallback Route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </>
   )
 }
 

@@ -20,199 +20,95 @@ const useScrollObserver = () => {
 };
 
 const LandingPage = () => {
-  const [activeStep, setActiveStep] = useState(0);
   useScrollObserver();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveStep((prev) => (prev + 1) % 3);
-    }, 5000); 
-    return () => clearInterval(interval);
-  }, []);
-
-  const steps = [
-    {
-      id: 1,
-      title: "You Search & Book",
-      desc: "Select your hotel and enter your details. It looks just like any other booking site.",
-      icon: "touch_app",
-      color: "blue"
-    },
-    {
-      id: 2,
-      title: "AI Analyzes in Background",
-      desc: "While you submit, our model calculates a risk score based on booking value, timing, and location.",
-      icon: "psychology",
-      color: "purple"
-    },
-    {
-      id: 3,
-      title: "Instant Decision",
-      desc: "Low Risk? Approved immediately. High Risk? Blocked to protect the hotel.",
-      icon: "verified_user",
-      color: "green"
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Hero Section */}
-      <div className="relative min-h-[600px] h-auto md:h-[650px] w-full flex flex-col justify-center" id="hero-search">
-        {/* Background Image */}
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      {/* Hero Section - REDESIGNED: Reduced top space on desktop, centralized on mobile */}
+      <div className="relative min-h-[750px] md:min-h-[700px] w-full flex flex-col justify-center md:justify-start pt-0 md:pt-32 lg:pt-36 items-center overflow-hidden" id="hero-search">
+        {/* Background Image with Parallax & Gradient Overlay */}
         <div className="absolute inset-0 z-0">
           <picture>
              <source media="(max-width: 768px)" srcSet="/hotel-images/hotel-7.jpg" />
              <img 
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxM6xoR24C0Q6wYiUkJPxIuf1ppy3LCdi6CCA-CzlJ6MtDRdSNCKfAQSZobvjjN6KdZjAXGApMvw8DD-1T9egYeB_Vro1uN_C-TKNtXHmhsrPFG17ztuaGqurZTKLETl5ogh9_wohUbWNOW2qQ3jhnPMooU5ZE9w0RDuIWhsKePMf0kS9G2gZceL4v41KemXtF66MfaPWg918n-ryXlEziXPzKQxhEDk8HrDGmvGVXq1pLnezDTMiWr1Y-9w1fGDkXlxVGPScyo2xw" 
               alt="Luxury Hotel" 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover animate-pan-slow opacity-80"
             />
           </picture>
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/95 via-blue-900/80 to-blue-900/40"></div>
+           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/90 via-blue-900/40 to-slate-900/90"></div>
+          {/* Subtle animated pattern */}
+          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] animate-fade-in"></div>
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-20 md:py-0">
-          <div className="max-w-3xl mb-10 opacity-0 translate-y-10 transition-all duration-1000 ease-out animate-on-scroll">
-            <h1 className="text-4xl md:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-xl">
-              Stay Secure.<br/> Book Smarter.
-            </h1>
-            <p className="text-lg md:text-2xl text-blue-100 leading-relaxed max-w-2xl drop-shadow-md">
-              The first hotel booking platform that validates reservations in real-time using AI. No logins. No hassle. Just pure security.
-            </p>
-          </div>
+        <div className="relative z-10 max-w-5xl mx-auto px-2 sm:px-6 lg:px-6 w-full flex flex-col items-center text-center">
 
-          {/* Glassmorphism Search Bar */}
-          <div className="bg-white/10 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-white/20 max-w-4xl opacity-0 translate-y-10 transition-all duration-1000 delay-300 ease-out animate-on-scroll">
-            <form className="grid grid-cols-1 md:grid-cols-12 gap-2 bg-white rounded-xl p-1">
-              <div className="md:col-span-4 bg-transparent p-3 flex items-center gap-3 border-b md:border-b-0 md:border-r border-gray-100">
-                <span className="material-symbols-outlined text-blue-600">bed</span>
-                <div className="flex flex-col w-full">
-                  <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Location</label>
-                  <input 
-                    type="text" 
-                    placeholder="Where are you going?" 
-                    className="w-full outline-none text-gray-900 font-semibold placeholder-gray-400 bg-transparent"
-                  />
-                </div>
-              </div>
-              <div className="md:col-span-3 bg-transparent p-3 flex items-center gap-3 border-b md:border-b-0 md:border-r border-gray-100">
-                <span className="material-symbols-outlined text-blue-600">calendar_month</span>
-                <div className="flex flex-col w-full">
-                  <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Dates</label>
-                  <input 
-                    type="text" 
-                    placeholder="Check-in — Check-out" 
-                    className="w-full outline-none text-gray-900 font-semibold placeholder-gray-400 bg-transparent"
-                  />
-                </div>
-              </div>
-              <div className="md:col-span-3 bg-transparent p-3 flex items-center gap-3">
-                 <span className="material-symbols-outlined text-blue-600">person</span>
-                 <div className="flex flex-col w-full">
-                  <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Guests</label>
-                  <input 
-                    type="text" 
-                    placeholder="2 guests, 1 room" 
-                    className="w-full outline-none text-gray-900 font-semibold placeholder-gray-400 bg-transparent"
-                  />
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <button type="button" className="w-full h-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 py-4 md:py-0">
-                  <span>Search</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="opacity-0 translate-y-10 transition-all duration-1000 ease-out animate-on-scroll flex flex-col items-center">
+              
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-white mb-6 leading-tight tracking-tight drop-shadow-2xl">
+                Sleep Soundly. <br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300">Book Securely.</span>
+              </h1>
+              
+              <p className="text-lg md:text-2xl text-gray-100 leading-relaxed max-w-3xl mb-10 font-light drop-shadow-md">
+                The world's first hospitality platform that actively detects fraud before you checkout.
+              </p>
 
-        {/* Stats Bar */}
-        <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-md border-t border-white/10 z-20">
-            <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white/90">
-                <div>
-                    <div className="text-2xl font-bold text-blue-400">99.8%</div>
-                    <div className="text-xs uppercase tracking-wide opacity-70 font-medium">Fraud Prevention</div>
-                </div>
-                <div>
-                    <div className="text-2xl font-bold text-blue-400">2.5ms</div>
-                    <div className="text-xs uppercase tracking-wide opacity-70 font-medium">Analysis Speed</div>
-                </div>
-                <div>
-                    <div className="text-2xl font-bold text-blue-400">500+</div>
-                    <div className="text-xs uppercase tracking-wide opacity-70 font-medium">Hotels Secured</div>
-                </div>
-                <div>
-                    <div className="text-2xl font-bold text-blue-400">Lagos</div>
-                    <div className="text-xs uppercase tracking-wide opacity-70 font-medium">HQ Location</div>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto">
+                  <a href="#destinations" className="px-10 py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full shadow-xl shadow-blue-900/40 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3 text-lg group">
+                    Find a Hotel
+                    <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  </a>
+                  <button onClick={() => document.getElementById('how-it-works').scrollIntoView({ behavior: 'smooth' })} className="px-10 py-5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold rounded-full border border-white/20 transition-all flex items-center justify-center gap-3 text-lg">
+                    <span className="material-symbols-outlined">play_circle</span>
+                    How it Works
+                  </button>
+              </div>
             </div>
+
         </div>
+
+        {/* Stats Bar REMOVED */}
+        
+        {/* CSS for Slow Pan Animation */}
+        <style>{`
+            @keyframes pan-slow {
+                0% { transform: scale(1.1); }
+                50% { transform: scale(1.15); }
+                100% { transform: scale(1.1); }
+            }
+            .animate-pan-slow {
+                animation: pan-slow 20s ease-in-out infinite;
+            }
+        `}</style>
       </div>
 
       {/* Trust Indicators / Infinite Logo Scroll */}
       <div className="bg-white py-12 border-b border-gray-100 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-            <p className="text-center text-sm font-bold uppercase text-gray-400 tracking-wider">Trusted by Top Nigerian Hotel Chains</p>
-        </div>
-        
         <div className="relative flex overflow-x-hidden group">
-            <div className="animate-marquee flex whitespace-nowrap gap-16 min-w-full items-center justify-center px-8">
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">apartment</span>
-                    <span className="text-xl font-bold text-gray-700">EkoGrand</span>
-                </div>
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">king_bed</span>
-                    <span className="text-xl font-bold text-gray-700">AbujaSuites</span>
-                </div>
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">water_lux</span>
-                    <span className="text-xl font-bold text-gray-700">LagosCoast</span>
-                </div>
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">deck</span>
-                    <span className="text-xl font-bold text-gray-700">IkejaRoyal</span>
-                </div>
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">villa</span>
-                    <span className="text-xl font-bold text-gray-700">MainlandInn</span>
-                </div>
-                 {/* Duplicates for spacing in loop */}
-                 <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">star</span>
-                    <span className="text-xl font-bold text-gray-700">SecureStay</span>
-                </div>
+            {/* Increased spacing and ensured content width is sufficient */}
+            <div className="animate-marquee flex whitespace-nowrap gap-32 items-center pr-32">
+                 {/* Set 1 */}
+                 {['Hilton', 'Marriott', 'Radisson', 'InterContinental', 'Sheraton', 'Four Points', 'Eko Hotel', 'Transcorp'].map((brand, i) => (
+                    <span key={i} className="text-2xl font-serif font-bold hover:text-blue-600 transition-colors cursor-default text-gray-400">{brand}</span>
+                 ))}
+                 {/* Set 2 - Ensure seamless loop */}
+                 {['Hilton', 'Marriott', 'Radisson', 'InterContinental', 'Sheraton', 'Four Points', 'Eko Hotel', 'Transcorp'].map((brand, i) => (
+                    <span key={`dup-${i}`} className="text-2xl font-serif font-bold hover:text-blue-600 transition-colors cursor-default text-gray-400">{brand}</span>
+                 ))}
             </div>
-
-            <div className="absolute top-0 animate-marquee2 flex whitespace-nowrap gap-16 min-w-full items-center justify-center px-8" aria-hidden="true">
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">apartment</span>
-                    <span className="text-xl font-bold text-gray-700">EkoGrand</span>
-                </div>
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">king_bed</span>
-                    <span className="text-xl font-bold text-gray-700">AbujaSuites</span>
-                </div>
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">water_lux</span>
-                    <span className="text-xl font-bold text-gray-700">LagosCoast</span>
-                </div>
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">deck</span>
-                    <span className="text-xl font-bold text-gray-700">IkejaRoyal</span>
-                </div>
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">villa</span>
-                    <span className="text-xl font-bold text-gray-700">MainlandInn</span>
-                </div>
-                <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-blue-600">star</span>
-                    <span className="text-xl font-bold text-gray-700">SecureStay</span>
-                </div>
+            
+            <div className="absolute top-0 animate-marquee2 flex whitespace-nowrap gap-32 items-center pr-32" aria-hidden="true">
+                 {/* Matching Set 1 */}
+                 {['Hilton', 'Marriott', 'Radisson', 'InterContinental', 'Sheraton', 'Four Points', 'Eko Hotel', 'Transcorp'].map((brand, i) => (
+                    <span key={`dup2-${i}`} className="text-2xl font-serif font-bold hover:text-blue-600 transition-colors cursor-default text-gray-400">{brand}</span>
+                 ))}
+                 {/* Matching Set 2 */}
+                 {['Hilton', 'Marriott', 'Radisson', 'InterContinental', 'Sheraton', 'Four Points', 'Eko Hotel', 'Transcorp'].map((brand, i) => (
+                    <span key={`dup2-dup-${i}`} className="text-2xl font-serif font-bold hover:text-blue-600 transition-colors cursor-default text-gray-400">{brand}</span>
+                 ))}
             </div>
         </div>
-        
-        {/* CSS for Marquee Animation */}
         <style>{`
             @keyframes marquee {
                 0% { transform: translateX(0%); }
@@ -223,132 +119,135 @@ const LandingPage = () => {
                 100% { transform: translateX(0%); }
             }
             .animate-marquee {
-                animation: marquee 25s linear infinite;
+                animation: marquee 60s linear infinite;
             }
             .animate-marquee2 {
-                animation: marquee2 25s linear infinite;
+                animation: marquee2 60s linear infinite;
             }
         `}</style>
       </div>
 
-      {/* Why SecureStay Section */}
-      <section id="features" className="py-24 bg-white relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30"></div>
+      {/* Why SecureStay Section - REDESIGNED */}
+      <section id="features" className="py-24 bg-gray-50 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-20 opacity-0 translate-y-10 transition-all duration-700 ease-out animate-on-scroll">
-            <span className="text-blue-600 font-bold uppercase tracking-widest text-sm bg-blue-50 px-4 py-1.5 rounded-full">Secure Architecture</span>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mt-6 mb-6">Hotel Booking Reimagined</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              We solve the problem of fake bookings and automated abuse without adding friction to your experience.
+          <div className="text-center mb-16 opacity-0 translate-y-10 transition-all duration-700 ease-out animate-on-scroll">
+            <span className="text-blue-600 font-bold uppercase tracking-widest text-xs">Why Choose Us</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mt-4 mb-6">Security Meets Simplicity.</h2>
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+                Advanced fraud protection that happens completely in the background.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {[
-              { icon: 'bolt', title: 'Real-Time Detection', desc: 'Checks keywords, patterns, and timing instantly.', delay: 'delay-0' },
-              { icon: 'no_accounts', title: 'Guest-First Experience', desc: 'No sign-ups. No passwords. No profiles.', delay: 'delay-150' },
-              { icon: 'psychology_alt', title: 'Explainable AI', desc: 'Transparent risk scoring based on behavior.', delay: 'delay-300' }
-            ].map((feature, idx) => (
-              <div key={idx} className={`bg-gray-50 rounded-2xl p-8 hover:bg-white hover:shadow-xl transition-all duration-500 border border-transparent hover:border-gray-100 group opacity-0 translate-y-10 animate-on-scroll ${feature.delay}`}>
-                <div className="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center mb-6 text-blue-600 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-3xl">{feature.icon}</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+             {/* Feature 1 */}
+             <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group opacity-0 translate-y-10 animate-on-scroll delay-0">
+                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                    <span className="material-symbols-outlined text-3xl">bolt</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Real-Time Detection</h3>
+                <p className="text-gray-500 leading-relaxed">
+                    Our AI analyzes 50+ data points in under 2 seconds, checking for disposable emails, proxy IPs, and unusual patterns instantly.
+                </p>
+             </div>
+
+             {/* Feature 2 */}
+             <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group opacity-0 translate-y-10 animate-on-scroll delay-100">
+                <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors duration-300">
+                    <span className="material-symbols-outlined text-3xl">no_accounts</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Frictionless Experience</h3>
+                <p className="text-gray-500 leading-relaxed">
+                    Legitimate guests never see a CAPTCHA or extra verification step. Security that feels invisible to your best customers.
+                </p>
+             </div>
+
+             {/* Feature 3 */}
+             <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group opacity-0 translate-y-10 animate-on-scroll delay-200">
+                <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
+                    <span className="material-symbols-outlined text-3xl">shield</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Guaranteed Safety</h3>
+                <p className="text-gray-500 leading-relaxed">
+                    We automatically block high-risk attempts, ensuring zero chargebacks and protecting your inventory from fake reservations.
+                </p>
+             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works (Step by Step Animation) */}
-      <section id="how-it-works" className="py-24 bg-gray-900 text-white overflow-hidden">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-               
-               {/* Left Content - Changing Steps */}
-               <div className="space-y-12 opacity-0 translate-y-10 transition-all duration-700 ease-out animate-on-scroll">
-                  <h2 className="text-3xl md:text-4xl font-bold mb-8">How Protection Works</h2>
-                  
-                  <div className="relative">
-                    {/* Vertical Line */}
-                    <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-800"></div>
+      {/* How It Works - REDESIGNED: Centralized Horizontal Process Flow */}
+      <section id="how-it-works" className="py-24 bg-slate-900 text-white overflow-hidden relative">
+         {/* Background Decoration */}
+         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+             <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px]"></div>
+             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px]"></div>
+         </div>
 
-                    <div className="space-y-8 relative z-10">
-                      {steps.map((step, index) => (
-                        <div 
-                          key={step.id}
-                          className={`flex gap-6 transition-all duration-500 ${
-                            index === activeStep 
-                              ? 'opacity-100 translate-x-2' 
-                              : 'opacity-40 grayscale hover:opacity-70 cursor-pointer'
-                          }`}
-                          onClick={() => setActiveStep(index)}
-                        >
-                          <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-2 transition-colors duration-300 bg-gray-900 ${
-                            index === activeStep ? 'border-blue-500 text-blue-400' : 'border-gray-700 text-gray-600'
-                          }`}>
-                            {step.id}
-                          </div>
-                          <div>
-                            <h4 className={`text-xl font-bold mb-2 ${index === activeStep ? 'text-white' : 'text-gray-400'}`}>
-                              {step.title}
-                            </h4>
-                            <p className="text-gray-400 max-w-sm leading-relaxed">
-                              {step.desc}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-20 opacity-0 translate-y-10 transition-all duration-700 ease-out animate-on-scroll">
+               <h2 className="text-3xl md:text-5xl font-bold mb-6">How It Works</h2>
+               <p className="text-gray-400 max-w-2xl mx-auto text-lg">Three simple steps to a secure booking.</p>
+            </div>
+
+            <div className="relative grid grid-cols-1 md:grid-cols-3 gap-12">
+               {/* Connecting Line (Desktop) */}
+               <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-blue-900 via-blue-500 to-blue-900 z-0"></div>
+
+               {/* Step 1 */}
+               <div className="relative z-10 flex flex-col items-center text-center opacity-0 translate-y-10 transition-all duration-700 ease-out animate-on-scroll delay-0 group">
+                  <div className="w-24 h-24 bg-slate-800 border-4 border-slate-700 group-hover:border-blue-500 rounded-full flex items-center justify-center mb-8 transition-colors duration-300 shadow-2xl">
+                     <span className="material-symbols-outlined text-4xl text-blue-400">search</span>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4">1. You Search</h3>
+                  <p className="text-gray-400 leading-relaxed px-4">
+                     Browse our curated list of verified hotels and select your dates.
+                  </p>
+               </div>
+
+               {/* Step 2 */}
+               <div className="relative z-10 flex flex-col items-center text-center opacity-0 translate-y-10 transition-all duration-700 ease-out animate-on-scroll delay-150 group">
+                  <div className="w-24 h-24 bg-slate-800 border-4 border-slate-700 group-hover:border-purple-500 rounded-full flex items-center justify-center mb-8 transition-colors duration-300 shadow-2xl">
+                     <span className="material-symbols-outlined text-4xl text-purple-400">psychology</span>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4">2. AI Verifies</h3>
+                  <p className="text-gray-400 leading-relaxed px-4">
+                     Our system analyzes the booking signal in milliseconds without interrupting you.
+                  </p>
+               </div>
+
+               {/* Step 3 */}
+               <div className="relative z-10 flex flex-col items-center text-center opacity-0 translate-y-10 transition-all duration-700 ease-out animate-on-scroll delay-300 group">
+                  <div className="w-24 h-24 bg-slate-800 border-4 border-slate-700 group-hover:border-green-500 rounded-full flex items-center justify-center mb-8 transition-colors duration-300 shadow-2xl">
+                     <span className="material-symbols-outlined text-4xl text-green-400">check_circle</span>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4">3. Instant Confirmation</h3>
+                  <p className="text-gray-400 leading-relaxed px-4">
+                     Receive your confirmation instantly. Safe, secure, and ready for check-in.
+                  </p>
+               </div>
+            </div>
+
+            {/* Visual Indicator of "Invisible Security" */}
+            <div className="mt-20 bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 flex flex-col md:flex-row items-center justify-between gap-8 opacity-0 translate-y-10 transition-all duration-700 ease-out animate-on-scroll delay-500 max-w-4xl mx-auto">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-green-500/10 rounded-lg">
+                        <span className="material-symbols-outlined text-green-400">security</span>
                     </div>
-                  </div>
-               </div>
-               
-               {/* Right Visual - Animated Mockup Changing based on Step */}
-               <div className="relative h-auto min-h-[400px] md:h-[500px] w-full flex items-center justify-center opacity-0 translate-y-10 transition-all duration-700 delay-300 ease-out animate-on-scroll">
-                  <div className="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full"></div>
-                  
-                  <div className="relative bg-white text-gray-900 p-4 sm:p-8 rounded-3xl shadow-2xl border-2 sm:border-4 border-gray-800 w-full max-w-md overflow-hidden min-h-[400px]">
-                      {/* Step 1 Visual */}
-                      <div className={`transition-all duration-700 absolute inset-0 flex flex-col items-center justify-center p-8 ${activeStep === 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-                          <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
-                            <span className="material-symbols-outlined text-5xl text-blue-600">touch_app</span>
-                          </div>
-                          <h3 className="text-2xl font-bold text-center mb-2">User Booking</h3>
-                          <div className="w-full bg-gray-100 p-3 rounded-lg mt-4 space-y-2">
-                             <div className="h-2 w-3/4 bg-gray-300 rounded"></div>
-                             <div className="h-2 w-1/2 bg-gray-300 rounded"></div>
-                          </div>
-                      </div>
-
-                      {/* Step 2 Visual */}
-                      <div className={`transition-all duration-700 absolute inset-0 flex flex-col items-center justify-center p-8 bg-blue-600 text-white ${activeStep === 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-                          <div className="relative mb-6">
-                            <span className="material-symbols-outlined text-6xl animate-spin-slow">settings</span>
-                            <span className="material-symbols-outlined text-4xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">psychology</span>
-                          </div>
-                          <h3 className="text-2xl font-bold text-center mb-2">AI Analysis</h3>
-                          <div className="font-mono text-xs bg-blue-800/50 p-4 rounded-lg mt-4 w-full">
-                             <p className="flex justify-between"><span className="opacity-50">RISK_SCORE:</span> <span className="text-green-300">CALCULATING...</span></p>
-                             <p className="flex justify-between mt-1"><span className="opacity-50">LOCATION:</span> <span className="text-yellow-300">CHECKING</span></p>
-                          </div>
-                      </div>
-
-                       {/* Step 3 Visual */}
-                      <div className={`transition-all duration-700 absolute inset-0 flex flex-col items-center justify-center p-8 ${activeStep === 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-                          <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6 scale-110">
-                            <span className="material-symbols-outlined text-5xl text-green-600">check_circle</span>
-                          </div>
-                          <h3 className="text-2xl font-bold text-center mb-2 text-green-700">Booking Approved</h3>
-                          <p className="text-center text-gray-500">Transaction verified securely.</p>
-                      </div>
-
-                      {/* Progress Bar Bottom */}
-                      <div className="absolute bottom-6 left-8 right-8 h-1 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-600 transition-all duration-300 ease-linear" style={{ width: `${((activeStep + 1) / 3) * 100}%` }}></div>
-                      </div>
-                  </div>
-               </div>
+                    <div>
+                        <h4 className="font-bold text-white">Bank-Grade Encryption</h4>
+                        <p className="text-sm text-gray-400">Your data is permanently protected.</p>
+                    </div>
+                </div>
+                <div className="h-8 w-[1px] bg-slate-700 hidden md:block"></div>
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-500/10 rounded-lg">
+                        <span className="material-symbols-outlined text-blue-400">visibility_off</span>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-white">Privacy First</h4>
+                        <p className="text-sm text-gray-400">We never sell or share your personal info.</p>
+                    </div>
+                </div>
             </div>
          </div>
       </section>

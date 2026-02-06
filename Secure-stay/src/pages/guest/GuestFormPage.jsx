@@ -247,7 +247,7 @@ const GuestFormPage = () => {
                        </p>
                    </div>
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
                        {/* Left Column: Summary */}
                        <div className="space-y-6">
                            <h2 className="text-sm uppercase tracking-wide text-gray-500 font-semibold border-b border-gray-200 pb-2 mb-4">
@@ -588,7 +588,7 @@ const GuestFormPage = () => {
                             id="fullname"
                             value={formData.fullname}
                             onChange={handleChange}
-                            className={`block w-full pl-10 sm:text-sm border ${errors.fullname ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
+                            className={`block w-full pl-10 text-base md:text-sm border ${errors.fullname ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                             placeholder="Chinedu Okafor"
                             required
                           />
@@ -608,7 +608,7 @@ const GuestFormPage = () => {
                             id="email"
                             value={formData.email}
                             onChange={handleChange}
-                            className={`block w-full pl-10 sm:text-sm border ${errors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
+                            className={`block w-full pl-10 text-base md:text-sm border ${errors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                             placeholder="c.okafor@example.com"
                             required
                           />
@@ -642,7 +642,7 @@ const GuestFormPage = () => {
                           id="phone"
                           value={formData.phone}
                           onChange={handleChange}
-                          className={`block w-full sm:text-sm border ${errors.phone ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
+                          className={`block w-full text-base md:text-sm border ${errors.phone ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                           placeholder="+234 801 234 5678"
                           required
                         />
@@ -673,7 +673,7 @@ const GuestFormPage = () => {
                           id="idNumber"
                           value={formData.idNumber}
                           onChange={handleChange}
-                          className={`block w-full sm:text-sm border ${errors.idNumber ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
+                          className={`block w-full text-base md:text-sm border ${errors.idNumber ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                           placeholder="A01234567"
                           required
                         />
@@ -802,8 +802,8 @@ const GuestFormPage = () => {
                       </div>
 
                       {formData.paymentType !== 'transfer' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                          <div className="col-span-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <div className="col-span-2 md:col-span-3">
                             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="card-number">Card Number</label>
                             <input 
                               type="text" 
@@ -811,7 +811,7 @@ const GuestFormPage = () => {
                               id="card-number"
                               value={formData.cardNumber}
                               onChange={handleChange}
-                              className={`block w-full sm:text-sm border ${errors.cardNumber ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
+                              className={`block w-full text-base md:text-sm border ${errors.cardNumber ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                               placeholder="0000 0000 0000 0000"
                             />
                             {errors.cardNumber && <p className="mt-1 text-xs text-red-600">{errors.cardNumber}</p>}
@@ -825,7 +825,7 @@ const GuestFormPage = () => {
                               id="expiry"
                               value={formData.expiry}
                               onChange={handleChange}
-                              className={`block w-full sm:text-sm border ${errors.expiry ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
+                              className={`block w-full text-base md:text-sm border ${errors.expiry ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                               placeholder="MM / YY"
                             />
                             {errors.expiry && <p className="mt-1 text-xs text-red-600">{errors.expiry}</p>}
@@ -840,7 +840,7 @@ const GuestFormPage = () => {
                                 id="cvc"
                                 value={formData.cvc}
                                 onChange={handleChange}
-                                className={`block w-full sm:text-sm border ${errors.cvc ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
+                                className={`block w-full text-base md:text-sm border ${errors.cvc ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg bg-white text-gray-900 py-3`}
                                 placeholder="123"
                               />
                                 {errors.cvc && <p className="absolute -bottom-5 text-xs text-red-600">{errors.cvc}</p>}
