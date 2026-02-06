@@ -58,15 +58,22 @@ const GuestFormPage = () => {
   }, []);
 
   const getFraudSignals = () => {
-    // 1. IP Risk (Simulated for this demo, would be backend geo-check)
-    // We'll simulate 'risk' if the minute is odd, just for variance in the demo
+    // 1. IP Risk
     const ip_risk = new Date().getMinutes() % 2 !== 0 ? 0 : 0; 
 
-    // 2. High Value Booking
-    const amount = room?.price || 0;
-    const high_value_booking = amount > 100000 ? 1 : 0;
+    // 2. High Value Booking (Sanitize input first)
+    // Remove "₦", ",", and spaces to get a clean number
+    let rawPrice = 0;
+    if (typeof room?.price === 'string') {
+        rawPrice = parseInt(room.price.replace(/[^\d]/g, ''), 10);
+    } else {
+        rawPrice = room?.price || 0;
+    }
+    
+    // Threshold check (100,000)
+    const high_value_booking = rawPrice > 100000 ? 1 : 0;
 
-    // 3. Time of Day (Late night bookings 11PM - 5AM are riskier)
+    // 3. Time of Day
     const hour = new Date().getHours();
     const odd_hour = (hour >= 23 || hour <= 5) ? 1 : 0;
 
