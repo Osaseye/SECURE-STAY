@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useScrollObserver } from '../../hooks/useScrollObserver';
 import { predictFraud } from '../../services/fraudService';
-import { createBooking } from '../../services/bookingService';
+import { createBooking, checkBookingHistory } from '../../services/bookingService';
 
 const GuestFormPage = () => {
   useScrollObserver();
@@ -57,7 +57,7 @@ const GuestFormPage = () => {
     }
   }, []);
 
-  const getFraudSignals = () => {
+  const getFraudSignals = (bookingHistory = []) => {
     // 1. IP Risk
     const ip_risk = new Date().getMinutes() % 2 !== 0 ? 0 : 0; 
 
@@ -65,26 +65,35 @@ const GuestFormPage = () => {
     // Remove "₦", ",", and spaces to get a clean number
     let rawPrice = 0;
     if (typeof room?.price === 'string') {
-        rawPrice = parseInt(room.price.replace(/[^\d]/g, ''), 10);
+        const cleanString = room.price.replace(/[^\d]/g, '');
+        rawPrice = cleanString ? parseInt(cleanString, 10) : 0;
     } else {
         rawPrice = room?.price || 0;
     }
     
     // Threshold check (100,000)
-    const high_value_booking = rawPrice > 100000 ? 1 : 0;
+    const high_value_booking = rawPrice >= 100000 ? 1 : 0;
 
     // 3. Time of Day
     const hour = new Date().getHours();
     const odd_hour = (hour >= 23 || hour <= 5) ? 1 : 0;
 
-    // 4. Rapid Booking Attempts (Check localStorage for recent timestamp)
-    const lastBookingTime = localStorage.getItem('securestay_last_booking');
+    // 4. Rapid Booking Attempts (Check database history)
     let rapid_attempts = 0;
-    if (lastBookingTime) {
-       const diff = new Date().getTime() - parseInt(lastBookingTime);
-       if (diff < 1000 * 60 * 10) { // Less than 10 mins
-          rapid_attempts = 1;
-       }
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    // Check if user has booked in the last 24 hours with same name
+    const recentBooking = bookingHistory.find(b => {
+        if (!b.createdAt) return false;
+        // Check Name Match
+        const nameMatch = b.guestName && b.guestName.toLowerCase() === formData.fullname.toLowerCase();
+        // Check Time
+        const isRecent = b.createdAt > oneDayAgo;
+        return nameMatch && isRecent;
+    });
+
+    if (recentBooking) {
+        rapid_attempts = 1; 
     }
 
     // 5. Device Change Logic (Check for persistent device ID)
@@ -99,6 +108,7 @@ const GuestFormPage = () => {
         // If device ID exists, we trust it more (0 risk)
         device_change = 0;
     }
+
 
     // 6. Country Mismatch (Compare Billing vs Form Country)
     const country_mismatch = (formData.billingCountry && formData.country && 
@@ -199,8 +209,11 @@ const GuestFormPage = () => {
           
           window.scrollTo({ top: 0, behavior: 'smooth' });
 
+          // 0. Check Booking History
+          const history = await checkBookingHistory(formData.email);
+
           // 1. Get Signals
-          const fraudSignals = getFraudSignals();
+          const fraudSignals = getFraudSignals(history);
           
           // 2. Call AI Service
           const riskScore = await predictFraud(fraudSignals);

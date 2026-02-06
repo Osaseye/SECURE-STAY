@@ -1,7 +1,26 @@
 import { db } from '../config/firebase';
-import { collection, addDoc, getDocs, doc, getDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, getDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, where } from 'firebase/firestore';
 
 const COLLECTION_NAME = 'bookings';
+
+// Check for previous bookings by email
+export const checkBookingHistory = async (email) => {
+    try {
+        const q = query(
+            collection(db, COLLECTION_NAME), 
+            where("email", "==", email)
+        );
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate() || new Date(0) // Handle timestamp conversion
+        }));
+    } catch (error) {
+        console.error("Error checking history:", error);
+        return [];
+    }
+};
+
 
 // Save a new booking to Firestore
 export const createBooking = async (bookingData) => {
