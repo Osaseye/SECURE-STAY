@@ -58,33 +58,37 @@ const GuestFormPage = () => {
   }, []);
 
   const getFraudSignals = () => {
-     // High Value: Room Price > 500k
-     const price = room ? room.price : 985000;
-     const high_value_booking = price > 500000 ? 1 : 0;
+    // 1. IP Risk (Simulated for this demo, would be backend geo-check)
+    // We'll simulate 'risk' if the minute is odd, just for variance in the demo
+    const ip_risk = new Date().getMinutes() % 2 !== 0 ? 0 : 0; 
+    
+    // 2. High Value Booking
+    const amount = room?.price || 0;
+    const high_value_booking = amount > 100000 ? 1 : 0; // Updated threshold to 100k
 
-     // Odd Hour: Between 11PM (23) and 6AM (6)
-     const hour = new Date().getHours();
-     const odd_hour = (hour >= 23 || hour <= 6) ? 1 : 0;
+    // 3. Time of Day (Late night bookings 11PM - 5AM are riskier)
+    const hour = new Date().getHours();
+    const odd_hour = (hour >= 23 || hour <= 5) ? 1 : 0;
 
-     // Rapid Attempts: Check if last attempt was < 10 mins ago
-     const lastAttempt = localStorage.getItem('last_booking_attempt');
-     let rapid_attempts = 0;
-     if (lastAttempt) {
+    // 4. Rapid Attempts: Check if last attempt was < 10 mins ago
+    const lastAttempt = localStorage.getItem('last_booking_attempt');
+    let rapid_attempts = 0;
+    if (lastAttempt) {
         const diff = Date.now() - parseInt(lastAttempt);
         if (diff < 10 * 60 * 1000) rapid_attempts = 1; 
-     }
+    }
 
-     const device_change = 0; 
-     const ip_risk = 0; 
+    const device_change = 0; 
+    const ip_risk = 0; 
      
-     return {
-         country_mismatch: formData.country !== formData.billingCountry ? 1 : 0,
-         rapid_attempts,
-         odd_hour,
-         high_value_booking,
-         device_change,
-         ip_risk
-     };
+    return {
+        country_mismatch: formData.country !== formData.billingCountry ? 1 : 0,
+        rapid_attempts,
+        odd_hour,
+        high_value_booking,
+        device_change,
+        ip_risk
+    };
   };
 
   const handleChange = (e) => {
