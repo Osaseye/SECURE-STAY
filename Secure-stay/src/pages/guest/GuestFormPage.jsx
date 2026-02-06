@@ -61,33 +61,50 @@ const GuestFormPage = () => {
     // 1. IP Risk (Simulated for this demo, would be backend geo-check)
     // We'll simulate 'risk' if the minute is odd, just for variance in the demo
     const ip_risk = new Date().getMinutes() % 2 !== 0 ? 0 : 0; 
-    
+
     // 2. High Value Booking
     const amount = room?.price || 0;
-    const high_value_booking = amount > 100000 ? 1 : 0; // Updated threshold to 100k
+    const high_value_booking = amount > 100000 ? 1 : 0;
 
     // 3. Time of Day (Late night bookings 11PM - 5AM are riskier)
     const hour = new Date().getHours();
     const odd_hour = (hour >= 23 || hour <= 5) ? 1 : 0;
 
-    // 4. Rapid Attempts: Check if last attempt was < 10 mins ago
-    const lastAttempt = localStorage.getItem('last_booking_attempt');
+    // 4. Rapid Booking Attempts (Check localStorage for recent timestamp)
+    const lastBookingTime = localStorage.getItem('securestay_last_booking');
     let rapid_attempts = 0;
-    if (lastAttempt) {
-        const diff = Date.now() - parseInt(lastAttempt);
-        if (diff < 10 * 60 * 1000) rapid_attempts = 1; 
+    if (lastBookingTime) {
+       const diff = new Date().getTime() - parseInt(lastBookingTime);
+       if (diff < 1000 * 60 * 10) { // Less than 10 mins
+          rapid_attempts = 1;
+       }
     }
 
-    const device_change = 0; 
-    const ip_risk = 0; 
-     
+    // 5. Device Change Logic (Check for persistent device ID)
+    let device_change = 0;
+    const storedDeviceId = localStorage.getItem('securestay_device_id');
+    if (!storedDeviceId) {
+        // If no device ID exists, it's a new device/incognito -> Slight Risk
+        device_change = 1; 
+        // Set one for next time
+        localStorage.setItem('securestay_device_id', 'dev_' + Math.random().toString(36).substr(2, 9));
+    } else {
+        // If device ID exists, we trust it more (0 risk)
+        device_change = 0;
+    }
+
+    // 6. Country Mismatch (Compare Billing vs Form Country)
+    const country_mismatch = (formData.billingCountry && formData.country && 
+                             formData.billingCountry.toLowerCase() !== formData.country.toLowerCase()) ? 1 : 0;
+
+    // Return the vector
     return {
-        country_mismatch: formData.country !== formData.billingCountry ? 1 : 0,
-        rapid_attempts,
-        odd_hour,
-        high_value_booking,
-        device_change,
-        ip_risk
+      ip_risk,
+      high_value_booking,
+      odd_hour,
+      rapid_attempts,
+      device_change,
+      country_mismatch
     };
   };
 
